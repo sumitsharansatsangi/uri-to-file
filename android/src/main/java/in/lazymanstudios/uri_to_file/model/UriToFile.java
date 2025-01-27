@@ -74,17 +74,12 @@ public class UriToFile {
         String filename = null;
 
         try {
-            Cursor cursor = context.getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
-            try {
+            try (Cursor cursor = context.getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
                     int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
                     if (index != -1) {
                         filename = cursor.getString(index);
                     }
-                }
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
                 }
             }
 
@@ -207,48 +202,42 @@ public class UriToFile {
         }
     }
 
-    private static class ClearCacheCallable implements Callable<Boolean> {
-        private final Context context;
-        private final MethodChannel.Result result;
-
-        public ClearCacheCallable(Context context, MethodChannel.Result result) {
-            this.context = context;
-            this.result = result;
-        }
+    private record ClearCacheCallable(Context context,
+                                      MethodChannel.Result result) implements Callable<Boolean> {
 
         private void delete(File file) {
-            File[] subfiles = file.listFiles();
+                File[] subfiles = file.listFiles();
 
-            if (subfiles != null) {
-                for (File i : subfiles) {
-                    if (i.isDirectory()) {
-                        delete(i);
+                if (subfiles != null) {
+                    for (File i : subfiles) {
+                        if (i.isDirectory()) {
+                            delete(i);
+                        }
+//                        i.delete();
                     }
-                    i.delete();
                 }
             }
-        }
 
-        @Override
-        public Boolean call() {
-            try {
-                File cacheDirectory = context.getCacheDir();
-                File appCacheDirectory = new File(cacheDirectory + File.separator + "uri_to_file");
-                delete(appCacheDirectory);
+            @Override
+            public Boolean call() {
+                try {
+                    File cacheDirectory = context.getCacheDir();
+                    File appCacheDirectory = new File(cacheDirectory + File.separator + "uri_to_file");
+                    delete(appCacheDirectory);
 
-                sendSuccessResult();
-            } catch (Exception ex) {
-                sendErrorResult(ex.getMessage());
+                    sendSuccessResult();
+                } catch (Exception ex) {
+                    sendErrorResult(ex.getMessage());
+                }
+                return true;
             }
-            return true;
-        }
 
-        private void sendSuccessResult() {
-            result.success(true);
-        }
+            private void sendSuccessResult() {
+                result.success(true);
+            }
 
-        private void sendErrorResult(final String errorMessage) {
-            result.error("IO_EXCEPTION", errorMessage, null);
+            private void sendErrorResult(final String errorMessage) {
+                result.error("IO_EXCEPTION", errorMessage, null);
+            }
         }
-    }
 }

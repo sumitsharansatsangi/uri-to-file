@@ -18,31 +18,16 @@ public class MethodResultWrapper implements MethodChannel.Result {
 
     @Override
     public void success(@Nullable final Object result) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                globalResult.success(result);
-            }
-        });
+        handler.post(() -> globalResult.success(result));
     }
 
     @Override
     public void error(@NonNull final String errorCode, @Nullable final String errorMessage, @Nullable final Object errorDetails) {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                globalResult.error(errorCode, errorMessage, errorDetails);
-            }
-        });
+        handler.post(() -> globalResult.error(errorCode, errorMessage, errorDetails));
     }
 
     @Override
     public void notImplemented() {
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                globalResult.notImplemented();
-            }
-        });
+        handler.post(globalResult::notImplemented);
     }
 }
