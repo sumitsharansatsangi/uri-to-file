@@ -1,27 +1,36 @@
+import com.android.build.api.dsl.LibraryExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.library")
-    id("org.jetbrains.kotlin.android")
+    kotlin("android")
 }
 
 group = "in.lazymanstudios.uri_to_file"
 version = "1.0"
 
 repositories {
-        google()
-        mavenCentral()
+    google()
+    mavenCentral()
+}
+
+extensions.configure<LibraryExtension>("android") {
+
+    namespace = "in.lazymanstudios.uri_to_file"
+    compileSdk = 37
+
+    defaultConfig {
+        minSdk = 24
     }
 
-android {
-    compileSdk =37
-    namespace = "in.lazymanstudios.uri_to_file"
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
+}
 
-    defaultConfig {
-        minSdk = 24
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_21)
     }
 }
